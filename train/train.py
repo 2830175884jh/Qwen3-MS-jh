@@ -1,17 +1,22 @@
-import json
+﻿import json
 import pandas as pd
 import torch
 from datasets import Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, DataCollatorForSeq2Seq
 from modelscope import snapshot_download
 import os
-from env_utils import configure_swanlab
+from env_utils import REPO_ROOT, configure_swanlab
 
 configure_swanlab(default_project="qwen3-sft-medical")
 PROMPT = "你是一个医学专家，你需要根据用户的问题，给出带有思考的回答。"
 MAX_LENGTH = 2048
 
 import swanlab
+
+PROJECT_ROOT = os.fspath(REPO_ROOT)
+DATA_DIR = os.path.join(PROJECT_ROOT, "data")
+MODEL_CACHE_DIR = os.path.join(PROJECT_ROOT, "models")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output", "Qwen3-0.6B")
 
 swanlab.config.update({
     "model": "Qwen/Qwen3-0.6B",
@@ -120,11 +125,8 @@ def predict(messages, model, tokenizer, device):
 model_name = "Qwen/Qwen3-0.6B"
 
 # 获取脚本所在目录，并创建模型缓存路径
-script_path = os.path.dirname(os.path.abspath(__file__))
-cache_path = os.path.join(script_path, "models")
-
 # 在modelscope上下载Qwen模型到本地目录下
-model_dir = snapshot_download(model_name, cache_dir=cache_path, revision="master")
+model_dir = snapshot_download(model_name, cache_dir=MODEL_CACHE_DIR, revision="master")
 
 # Transformers加载模型权重（本地）
 device, load_dtype = select_device_and_dtype()
@@ -139,11 +141,11 @@ model.enable_input_require_grads()  # 开启梯度检查点时，要执行该方
 model.to(device)
 
 # 加载、处理数据集和测试集
-train_dataset_path = os.path.join(script_path, "train.jsonl")
-val_dataset_path = os.path.join(script_path, "val.jsonl")
+train_dataset_path = os.path.join(DATA_DIR, "train.jsonl")
+val_dataset_path = os.path.join(DATA_DIR, "val.jsonl")
 
-train_jsonl_new_path = os.path.join(script_path, "train_format.jsonl")
-val_jsonl_new_path = os.path.join(script_path, "val_format.jsonl")
+train_jsonl_new_path = os.path.join(DATA_DIR, "train_format.jsonl")
+val_jsonl_new_path = os.path.join(DATA_DIR, "val_format.jsonl")
 
 if not os.path.exists(train_jsonl_new_path):
     dataset_jsonl_transfer(train_dataset_path, train_jsonl_new_path)
@@ -164,7 +166,7 @@ eval_dataset = eval_ds.map(process_func, remove_columns=eval_ds.column_names)
 collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True, label_pad_token_id=-100)
 
 args = TrainingArguments(
-    output_dir=os.path.join(script_path, "output/Qwen3-0.6B"),
+    output_dir=OUTPUT_DIR,
     per_device_train_batch_size=1,
     per_device_eval_batch_size=1,
     gradient_accumulation_steps=4,
@@ -218,3 +220,4 @@ for index, row in test_df.iterrows():
 swanlab.log({"Prediction": test_text_list})
 
 swanlab.finish()
+

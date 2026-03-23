@@ -1,8 +1,10 @@
-import torch
+﻿import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 from modelscope import snapshot_download
 import os
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def predict(messages, model, tokenizer):
     device = next(model.parameters()).device
@@ -21,8 +23,7 @@ def predict(messages, model, tokenizer):
 model_name = "Qwen/Qwen3-0.6B"
 
 # 获取脚本所在目录，并创建模型缓存路径
-script_path = os.path.dirname(os.path.abspath(__file__))
-cache_path = os.path.join(script_path, "models")
+cache_path = os.path.join(PROJECT_ROOT, "models")
 
 # 在modelscope上下载Qwen模型到本地目录下
 model_dir = snapshot_download(model_name, cache_dir=cache_path, revision="master")
@@ -54,3 +55,4 @@ messages = [
 
 response = predict(messages, model, tokenizer)
 print(response)
+

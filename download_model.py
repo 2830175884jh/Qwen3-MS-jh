@@ -1,4 +1,4 @@
-import os
+﻿import os
 from modelscope import snapshot_download
 
 # 获取脚本所在目录，并创建模型缓存路径
@@ -9,3 +9,4 @@ cache_path = os.path.join(script_path, "models")
 model_dir = snapshot_download("Qwen/Qwen3-1.7B", cache_dir=cache_path, revision="master")
 
 print(f"Model downloaded to: {model_dir}")
+

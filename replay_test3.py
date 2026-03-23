@@ -1,4 +1,4 @@
-import os
+﻿import os
 import pandas as pd
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -13,7 +13,7 @@ SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 CHECKPOINT_PATH = os.path.join(SCRIPT_PATH, "output", "Qwen3-0.6B", "checkpoint-1084")
 
 # 这里要用你训练时生成好的格式化验证集
-TEST_FILE = os.path.join(SCRIPT_PATH, "val_format.jsonl")
+TEST_FILE = os.path.join(SCRIPT_PATH, "data", "val_format.jsonl")
 
 # 生成长度
 MAX_NEW_TOKENS = 4096   # 先别太小，避免只出think没出正文
@@ -126,3 +126,4 @@ for index, row in test_df.iterrows():
     print(f"Question: {input_value}")
     print(f"\nLLM: {response}")
     print("\n")
+

@@ -1,4 +1,4 @@
-import torch
+﻿import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import argparse
 import os
@@ -103,5 +103,6 @@ if __name__ == "__main__":
 
     output = predict(messages, model, tokenizer)
     print(output)
+
 
 

@@ -1,256 +1,290 @@
-# Qwen3 医疗助手项目完整说明文档
+# Qwen3 医疗助手项目
 
-## 项目概述
+这是一个基于 Qwen3 的医疗领域微调与推理项目，包含数据下载、数据格式转换、全参数微调、LoRA 微调、结构化医学知识生成、基础推理和交互式医疗助手等完整流程。
 
-本项目是基于Qwen3大语言模型的医疗领域微调项目，实现了医疗智能助手功能。项目采用R1推理风格，能够提供专业的医疗咨询、诊断建议、治疗方案等多种医疗场景服务。
+仓库根目录已经调整为当前目录，下面所有命令默认在仓库根目录执行。
 
-### 核心特性
+## 主要功能
 
-- 🏥 **多场景医疗咨询**：支持10种医疗场景的专业咨询
-- 🧠 **R1推理风格**：具备思考过程的医疗推理能力
-- 🔧 **多种微调方式**：支持全参数微调和LoRA微调
-- 📊 **完整训练流程**：从数据准备到模型部署的完整pipeline
-- 🎯 **专业医疗提示词**：针对不同医疗场景优化的提示词模板
+- 数据集自动下载、划分和格式化
+- Qwen3-0.6B 全参数微调
+- Qwen3-1.7B LoRA 微调
+- 结构化医学知识解释与科普训练
+- 基础推理、LoRA 推理、命令行预测、交互式医疗助手
+- SwanLab 训练记录，支持本地模式和云端模式
 
-## 项目结构
+## 仓库结构
 
+```text
+.
+├── data/
+│   ├── data.py
+│   ├── transform_medical_dataset.py
+│   ├── train.jsonl                  # 运行 data.py 后生成
+│   ├── val.jsonl                    # 运行 data.py 后生成
+│   ├── train_format.jsonl           # 训练脚本自动生成
+│   ├── val_format.jsonl             # 训练脚本自动生成
+│   ├── medical_education_structured.jsonl
+│   ├── train_structured.jsonl
+│   └── val_structured.jsonl
+├── inference/
+│   ├── inference.py
+│   └── inference_lora.py
+├── main/
+│   ├── medical_assistant.py
+│   └── medical_education_assistant.py
+├── train/
+│   ├── env_utils.py
+│   ├── train.py
+│   ├── train_lora.py
+│   └── train_lora_structured.py
+├── download_model.py
+├── predict.py
+├── replay_test3.py
+├── requirements.txt
+├── .env.example
+├── README.md
+└── README_EN.md
 ```
-week9/项目实战/
-├── 📁 核心脚本
-│   ├── medical_assistant.py      # 医疗助手主程序（350行）
-│   ├── train.py                  # 全参数微调训练脚本（222行）
-│   ├── train_lora.py             # LoRA微调训练脚本（188行）
-│   ├── predict.py                # 模型推理脚本（111行）
-│   ├── inference.py              # 基础推理脚本（57行）
-│   ├── inference_lora.py         # LoRA推理脚本（56行）
-│   ├── data.py                   # 数据处理脚本（57行）
-│   └── download_model.py         # 模型下载脚本（15行）
-├── 📁 配置文件
-│   ├── requirements.txt          # 依赖包列表
-│   ├── sample_questions.json     # 示例问题集
-│   └── train.ipynb              # Jupyter训练笔记本
-├── 📁 数据文件
-│   ├── train.jsonl              # 训练数据集
-│   ├── val.jsonl                # 验证数据集
-│   ├── train_format.jsonl       # 格式化训练数据
-│   └── val_format.jsonl         # 格式化验证数据
-├── 📁 模型文件
-│   ├── models/                  # 基础模型存储
-│   └── output/                  # 训练输出模型
-└── 📁 日志文件
-    └── swanlog/                 # SwanLab训练日志
-```
-
-## 技术架构
-
-### 基础模型
-- **Qwen3-0.6B**: 项目主要使用的轻量级模型，适合资源受限环境
-- **Qwen3-1.7B**: 可选模型，用于对比实验
-
-### 微调技术
-1. **全参数微调**: 更新模型所有权重参数
-2. **LoRA微调**: 低秩适应，高效微调技术
-
-### 推理风格
-- **R1推理风格**: 包含思考过程的推理模式
-- **医疗专业提示词**: 针对不同医疗场景优化
 
 ## 环境要求
 
-### 硬件要求（基于Qwen3-0.6B）
-- **全参数微调**: 16GB显存
-- **LoRA微调**: 12GB显存
-- **推理**: 4GB显存（推荐）
+- Python 3.10 或更高版本
+- 有 CUDA 的显卡更适合训练；没有 GPU 也可以跑推理或小规模验证
+- 依赖包见 `requirements.txt`
 
-### 软件依赖
-```bash
-swanlab                    # 训练监控
-modelscope==1.22.0        # 模型下载
-transformers              # 模型加载
-datasets==3.2.0           # 数据处理
-peft                      # LoRA微调
-accelerate                # 训练加速
-pandas                    # 数据处理
-addict                    # 配置管理
-```
+安装依赖：
 
-## 快速开始
-
-### 1. 环境安装
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 数据准备
+## 环境变量
+
+训练脚本会自动读取仓库根目录下的 `.env` 文件。建议先复制示例文件：
+
 ```bash
-python data.py
+copy .env.example .env
 ```
-自动完成：
-- 数据集下载（delicate_medical_r1_data）
-- 数据预处理和格式化
-- 训练/验证集划分（9:1比例）
 
-### 3. 模型训练
+然后按需填写：
 
-#### 全参数微调
+- `SWANLAB_API_KEY`
+- `SWANLAB_MODE`
+- `SWANLAB_SAVE_DIR`
+- `SWANLAB_LOG_DIR`
+- `SWANLAB_PROJECT`
+
+说明：
+
+- 如果设置了 `SWANLAB_API_KEY`，默认走 `cloud`
+- 如果没有设置 `SWANLAB_API_KEY`，默认走 `local`
+- `SWANLAB_SAVE_DIR` 默认是仓库根目录下的 `.swanlab/`
+- `SWANLAB_LOG_DIR` 默认是仓库根目录下的 `swanlog/`
+- `SWANLAB_PROJECT` 不填时由训练脚本使用默认项目名
+
+## 数据准备
+
+### 1. 下载并划分原始数据
+
 ```bash
-python train.py
+python data\data.py
 ```
 
-#### LoRA微调
+这一步会下载 `krisfu/delicate_medical_r1_data`，并生成：
+
+- `data\train.jsonl`
+- `data\val.jsonl`
+
+### 2. 生成结构化医学科普数据
+
 ```bash
-python train_lora.py
+python data\transform_medical_dataset.py
 ```
 
-### 4. 模型推理
+这一步会基于 `data\train_format.jsonl` 生成：
 
-#### 基础推理
+- `data\medical_education_structured.jsonl`
+- `data\train_structured.jsonl`
+- `data\val_structured.jsonl`
+
+## 训练
+
+### 全参数微调
+
 ```bash
-python inference.py
+python train\train.py
 ```
 
-#### 医疗助手交互
+说明：
+
+- 使用 Qwen3-0.6B
+- 读取 `data\train.jsonl` 和 `data\val.jsonl`
+- 自动生成 `data\train_format.jsonl` 和 `data\val_format.jsonl`
+- 输出目录为 `output\Qwen3-0.6B`
+
+### LoRA 微调
+
 ```bash
-python medical_assistant.py
+python train\train_lora.py
 ```
 
-## 医疗场景支持
+说明：
 
-项目支持10种专业医疗场景：
+- 使用 Qwen3-1.7B
+- 读取 `data\train.jsonl` 和 `data\val.jsonl`
+- 自动生成 `data\train_format.jsonl` 和 `data\val_format.jsonl`
+- 输出目录为 `output\Qwen3-1.7B`
 
-| 场景ID | 场景名称 | 专业领域 | 示例问题 |
-|--------|----------|----------|----------|
-| 1 | 症状诊断 | 临床诊断 | "我最近经常头痛，伴有恶心，这是什么原因？" |
-| 2 | 治疗方案 | 治疗指导 | "高血压患者应该如何控制血压？" |
-| 3 | 疾病预防 | 预防医学 | "如何预防心血管疾病？" |
-| 4 | 医学教育 | 医学知识 | "什么是高血压？" |
-| 5 | 紧急评估 | 急诊医学 | "胸痛持续了3天，需要立即就医吗？" |
-| 6 | 营养指导 | 营养学 | "糖尿病患者应该如何选择食物？" |
-| 7 | 心理健康 | 心理学 | "如何缓解焦虑情绪？" |
-| 8 | 儿科咨询 | 儿科学 | "儿童发热应该如何处理？" |
-| 9 | 老年健康 | 老年医学 | "老年人如何预防跌倒？" |
-| 10 | 女性健康 | 妇科学 | "更年期症状如何缓解？" |
+### 结构化医学知识科普训练
 
-## 使用方式
-
-### 交互式使用
 ```bash
-python medical_assistant.py
+python train\train_lora_structured.py
 ```
 
-### 命令行使用
+说明：
+
+- 使用结构化数据 `data\train_structured.jsonl` 和 `data\val_structured.jsonl`
+- 输出目录为 `output\Qwen3-0.6B-structured`
+- 适合训练“结构化解释与科普”风格的模型
+
+## 推理与助手
+
+### 基础推理
+
 ```bash
-# 单次问答
-python medical_assistant.py -q "我最近头痛，可能是什么原因？" -s diagnosis
-
-# 批量处理
-python medical_assistant.py -b sample_questions.json
-
-# 指定模型路径
-python medical_assistant.py -c ./output/Qwen3-0.6B/checkpoint-900
+python inference\inference.py
 ```
 
-### 编程接口
+说明：
 
-```python
-from main.medical_assistant import MedicalAssistant
+- 会下载并缓存 Qwen3-0.6B 到 `models\`
+- 适合验证基础模型的单轮回答效果
 
-# 创建助手实例
-assistant = MedicalAssistant("./output/Qwen3-0.6B/checkpoint-900")
-assistant.load_model()
+### LoRA 推理
 
-# 询问问题
-response = assistant.ask_question(
-    "我最近胃部不适，可能是什么原因？",
-    scenario_type="diagnosis"
-)
-print(response)
+```bash
+python inference\inference_lora.py
 ```
 
-## 训练监控
+说明：
 
-项目集成SwanLab进行训练监控：
-- 实时损失曲线
-- 学习率变化
-- 模型性能指标
-- 训练日志记录
+- 会下载并缓存 Qwen3-0.6B 到 `models\`
+- 需要你把脚本里 `PeftModel.from_pretrained(...)` 的 LoRA 路径改成自己训练得到的 checkpoint
+- 这是一个模板脚本，不是开箱即用的固定路径
 
-访问地址：[SwanLab训练监控](https://swanlab.cn/@ZeyiLin/qwen3-sft-medical/overview)
+### 命令行预测
 
-## 模型性能
-
-### 训练效果对比
-- **全参数微调**: 效果更好，但资源消耗大
-- **LoRA微调**: 资源消耗小，效果略逊于全参数微调
-
-### 推理示例
-```
-Question: 医生，我最近胃部不适，听说有几种抗溃疡药物可以治疗，您能详细介绍一下这些药物的分类、作用机制以及它们是如何影响胃黏膜的保护与损伤平衡的吗？
-
-LLM:
-<think>
-用户询问抗溃疡药物的分类、作用机制，以及它们如何影响胃黏膜的保护和损伤平衡。
-首先，我需要回忆抗溃疡药物的主要分类：
-1. 抑酸药：H2受体拮抗剂、质子泵抑制剂
-2. 胃黏膜保护剂：硫糖铝、铋剂
-3. 促胃动力药：多潘立酮、西沙必利
-4. 抗幽门螺杆菌药物：抗生素组合
-
-每个类别的作用机制：
-- 抑酸药：减少胃酸分泌，减轻对黏膜的损伤
-- 保护剂：形成保护层，增强黏膜屏障
-- 促胃动力药：增强胃蠕动，减少胃酸反流
-- 抗幽门螺杆菌药物：杀灭病原体，减少损伤因素
-</think>
-
-当然可以。抗溃疡药物主要分为四类：抑酸药、胃黏膜保护剂、促胃动力药和抗幽门螺杆菌药物。
-
-抑酸药如H₂受体拮抗剂和质子泵抑制剂，它们的作用是减少胃酸的分泌，从而减轻对胃黏膜的损伤。胃黏膜保护剂如硫糖铝和胶体果胶铋，它们能帮助形成一层保护膜，覆盖在胃黏膜表面，减少胃酸和胃蛋白酶对黏膜的侵蚀。
-
-促胃动力药如多潘立酮和西沙必利，通过增强胃部的蠕动，减少胃内食物的滞留时间，从而降低溃疡的风险。抗幽门螺杆菌药物则通过抑制幽门螺杆菌的生长，减少其对胃黏膜的伤害。
-
-这些药物的共同目标是通过不同的机制来平衡胃黏膜的保护因素和损伤因素，帮助溃疡愈合。如果您有具体的症状或担心某种药物，可以告诉我，我会为您推荐合适的治疗方案。
+```bash
+python predict.py --input "医生，我最近头痛，可能是什么原因？"
 ```
 
-## 注意事项
+说明：
 
-### 医疗免责声明
-- 本助手仅提供参考建议，不能替代专业医疗诊断
-- 紧急情况请立即就医
-- 所有建议仅供参考，具体治疗请咨询专业医生
+- 会自动寻找 `output\Qwen3-0.6B` 下最新的 `checkpoint-*`
+- 可以用 `-c` 显式指定 checkpoint
+- 可以用 `-s` 替换 system 提示词
+- 可以用 `-m` 调整生成长度
 
-### 技术限制
-- 模型基于训练数据，可能存在知识局限性
-- 建议结合最新医学指南使用
-- 定期更新模型以保持准确性
+常见参数：
 
-## 扩展开发
+- `--input` 或 `-i`：问题文本
+- `--instruction` 或 `-s`：system 提示词
+- `--checkpoint` 或 `-c`：模型 checkpoint 路径
+- `--max_new_tokens` 或 `-m`：最大生成长度
 
-### 添加新的医疗场景
-1. 在`MEDICAL_PROMPTS`中添加新的提示词
-2. 在`MEDICAL_SCENARIOS`中添加场景描述
-3. 在`SAMPLE_QUESTIONS`中添加示例问题
+### 交互式医疗助手
 
-### 自定义模型路径
-```python
-assistant = MedicalAssistant("./your/custom/model/path")
+```bash
+python main\medical_assistant.py -c output\Qwen3-1.7B\checkpoint-xxxx
 ```
 
-### 批量处理自定义问题
-```json
-[
-  {
-    "question": "您的问题",
-    "scenario": "diagnosis",
-    "max_tokens": 512
-  }
-]
+说明：
+
+- 支持 10 个医疗场景
+- 支持单次问答、交互式问答和批量 JSON 问题文件
+- 建议通过 `-c` 显式指定你自己的 checkpoint 路径
+
+常见参数：
+
+- `--checkpoint` 或 `-c`：模型 checkpoint
+- `--question` 或 `-q`：直接提问
+- `--scenario` 或 `-s`：场景类型
+- `--max-tokens` 或 `-m`：最大生成 token 数
+- `--batch` 或 `-b`：批量问题文件
+- `--save-history`：保存对话历史
+
+可用场景：
+
+- `diagnosis`
+- `treatment`
+- `prevention`
+- `education`
+- `emergency`
+- `nutrition`
+- `mental_health`
+- `pediatric`
+- `geriatric`
+- `women_health`
+
+### 结构化医学知识解释助手
+
+```bash
+python main\medical_education_assistant.py -c output\Qwen3-0.6B-structured
 ```
 
-## 相关资源
+说明：
 
-- **基础模型**: [Qwen3-0.6B](https://modelscope.cn/models/Qwen/Qwen3-0.6B/summary)
-- **数据集**: [delicate_medical_r1_data](https://modelscope.cn/datasets/krisfu/delicate_medical_r1_data)
-- **训练监控**: [SwanLab](https://swanlab.cn/@ZeyiLin/qwen3-sft-medical/overview)
+- 支持结构化医学知识解释与科普
+- 默认会在你传入的目录里自动寻找最新 `checkpoint-*`
+- 也支持单次问答和批量 JSON 问题文件
 
+可用场景：
+
+- `general`
+- `concept`
+- `drug_test`
+- `disease`
+- `health`
+
+## 其他脚本
+
+- `download_model.py`：下载 Qwen3-1.7B 到本地 `models\`
+- `replay_test3.py`：读取 `data\val_format.jsonl` 的前 3 条样本做回放测试
+- `README_EN.md`：英文说明文档
+
+## 输出目录
+
+运行后可能生成以下本地目录或文件：
+
+- `models\`
+- `output\`
+- `.swanlab\`
+- `swanlog\`
+- `data\train.jsonl`
+- `data\val.jsonl`
+- `data\train_format.jsonl`
+- `data\val_format.jsonl`
+- `data\medical_education_structured.jsonl`
+- `data\train_structured.jsonl`
+- `data\val_structured.jsonl`
+
+这些都是运行时产物，公开仓库里通常不需要提交。
+
+## 使用建议
+
+- 公共仓库不要提交 `.env`
+- 不要提交真实密钥、token、密码
+- 不要提交大模型权重和训练产物，除非你明确希望公开
+- 如果原始数据包含敏感信息，先做脱敏再公开
+
+## 模型与数据来源
+
+- 基础模型：Qwen3-0.6B、Qwen3-1.7B
+- 数据集：`krisfu/delicate_medical_r1_data`
+- 训练监控：SwanLab
+
+## 许可证和引用
+
+如果你打算公开发布，请确认原始项目、模型和数据集的许可证要求，并在需要时补充作者署名和引用说明。
 

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import json
 import random
 import re
@@ -7,10 +7,11 @@ from pathlib import Path
 # =========================
 # 固定路径配置：按你本地情况改这里
 # =========================
-SRC_PATH = Path(r"D:\ai\work\study\project\Qwen3-MS\data\train_format.jsonl")
-OUT_PATH = Path(r"D:\ai\work\study\project\Qwen3-MS\data\medical_education_structured.jsonl")
-TRAIN_PATH = Path(r"D:\ai\work\study\project\Qwen3-MS\data\train_structured.jsonl")
-VAL_PATH = Path(r"D:\ai\work\study\project\Qwen3-MS\data\val_structured.jsonl")
+DATA_DIR = Path(__file__).resolve().parent
+SRC_PATH = DATA_DIR / "train_format.jsonl"
+OUT_PATH = DATA_DIR / "medical_education_structured.jsonl"
+TRAIN_PATH = DATA_DIR / "train_structured.jsonl"
+VAL_PATH = DATA_DIR / "val_structured.jsonl"
 
 NEW_INSTRUCTION = "你是一名医学知识解释与科普助手，请针对用户的问题给出结构化、通俗、严谨的解释。不要输出思考过程，不要输出<think>标签。"
 
@@ -158,3 +159,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

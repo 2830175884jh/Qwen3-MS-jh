@@ -1,8 +1,11 @@
-from modelscope.msdatasets import MsDataset
+﻿from modelscope.msdatasets import MsDataset
 import json
 import random
 import os
 import time
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 # 设置ModelScope镜像源
 os.environ['MODELSCOPE_ENDPOINT'] = 'https://modelscope.oss-cn-beijing.aliyuncs.com'
@@ -41,13 +44,13 @@ train_data = data_list[:split_idx]
 val_data = data_list[split_idx:]
 
 # 保存训练集
-with open('train.jsonl', 'w', encoding='utf-8') as f:
+with (BASE_DIR / "train.jsonl").open('w', encoding='utf-8') as f:
     for item in train_data:
         json.dump(item, f, ensure_ascii=False)
         f.write('\n')
 
 # 保存验证集
-with open('val.jsonl', 'w', encoding='utf-8') as f:
+with (BASE_DIR / "val.jsonl").open('w', encoding='utf-8') as f:
     for item in val_data:
         json.dump(item, f, ensure_ascii=False)
         f.write('\n')
@@ -55,3 +58,4 @@ with open('val.jsonl', 'w', encoding='utf-8') as f:
 print(f"数据集已分割完成：")
 print(f"训练集大小：{len(train_data)}")
 print(f"验证集大小：{len(val_data)}")
+

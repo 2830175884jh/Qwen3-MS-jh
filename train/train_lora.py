@@ -7,14 +7,16 @@ from transformers import AutoTokenizer
 from transformers import AutoModelForCausalLM, TrainingArguments, Trainer, DataCollatorForSeq2Seq
 from peft import LoraConfig, TaskType, get_peft_model
 import os
-from env_utils import configure_swanlab
+from env_utils import REPO_ROOT, configure_swanlab
 
 configure_swanlab(default_project="qwen3-sft-medical")
 
 import swanlab
 
-script_path = os.path.dirname(os.path.abspath(__file__))
-cache_path = os.path.join(script_path, "models")
+PROJECT_ROOT = os.fspath(REPO_ROOT)
+DATA_DIR = os.path.join(PROJECT_ROOT, "data")
+MODEL_CACHE_DIR = os.path.join(PROJECT_ROOT, "models")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output", "Qwen3-1.7B")
 model_name = "Qwen/Qwen3-1.7B"
 
 PROMPT = "你是一个医学专家，你需要根据用户的问题，给出带有思考的回答。"
@@ -97,8 +99,8 @@ def predict(messages, model, tokenizer):
 
     return response
 
-    # 在 ModelScope 上下载 Qwen 模型到本地目录
-model_dir = snapshot_download(model_name, cache_dir=cache_path, revision="master")
+# 在 ModelScope 上下载 Qwen 模型到本地目录
+model_dir = snapshot_download(model_name, cache_dir=MODEL_CACHE_DIR, revision="master")
 
     # Transformers 加载模型权重
 tokenizer = AutoTokenizer.from_pretrained(model_dir, use_fast=False, trust_remote_code=True)
@@ -118,11 +120,11 @@ config = LoraConfig(
 model = get_peft_model(model, config)
 
 # 加载并处理训练集和测试集
-train_dataset_path = os.path.join(script_path, "train.jsonl")
-test_dataset_path = os.path.join(script_path, "val.jsonl")
+train_dataset_path = os.path.join(DATA_DIR, "train.jsonl")
+test_dataset_path = os.path.join(DATA_DIR, "val.jsonl")
 
-train_jsonl_new_path = os.path.join(script_path, "train_format.jsonl")
-test_jsonl_new_path = os.path.join(script_path, "val_format.jsonl")
+train_jsonl_new_path = os.path.join(DATA_DIR, "train_format.jsonl")
+test_jsonl_new_path = os.path.join(DATA_DIR, "val_format.jsonl")
 
 if not os.path.exists(train_jsonl_new_path):
     dataset_jsonl_transfer(train_dataset_path, train_jsonl_new_path)
@@ -140,7 +142,7 @@ eval_ds = Dataset.from_pandas(eval_df)
 eval_dataset = eval_ds.map(process_func, remove_columns=eval_ds.column_names)
 
 args = TrainingArguments(
-    output_dir=os.path.join(script_path, "output/Qwen3-1.7B"),
+    output_dir=OUTPUT_DIR,
     per_device_train_batch_size=1,
     per_device_eval_batch_size=1,
     gradient_accumulation_steps=4,

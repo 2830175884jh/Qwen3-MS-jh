@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 结构化医学知识解释与科普助手
@@ -20,6 +20,8 @@ try:
     from peft import AutoPeftModelForCausalLM
 except Exception:
     AutoPeftModelForCausalLM = None
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # 更贴合你这次“结构化医学知识解释与科普”数据的提示词
@@ -157,10 +159,8 @@ def post_process_response(text: str) -> str:
 
 class MedicalEducationAssistant:
     def __init__(self, checkpoint_path: Optional[str] = None):
-        self.project_root = os.path.dirname(os.path.abspath(__file__))
-        self.default_output_dir = os.path.join(
-            self.project_root, "output", "Qwen3-0.6B-structured"
-        )
+        self.project_root = PROJECT_ROOT
+        self.default_output_dir = os.path.join(self.project_root, "output", "Qwen3-0.6B-structured")
         self.checkpoint_path = checkpoint_path or self.default_output_dir
         self.device, self.dtype = self._select_device_and_dtype()
         self.model = None
@@ -410,7 +410,7 @@ def main() -> None:
         "--checkpoint",
         "-c",
         type=str,
-        default="../output/Qwen3-0.6B-structured",
+        default=os.path.join(PROJECT_ROOT, "output", "Qwen3-0.6B-structured"),
         help="模型 checkpoint 目录或其父目录。默认会自动选择最新 checkpoint",
     )
     parser.add_argument(
@@ -468,3 +468,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

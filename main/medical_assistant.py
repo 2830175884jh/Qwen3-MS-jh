@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 医疗助手集成脚本
@@ -12,6 +12,8 @@ import json
 import time
 from datetime import datetime
 import os
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # 医疗专业提示词模板
 MEDICAL_PROMPTS = {
@@ -66,7 +68,7 @@ SAMPLE_QUESTIONS = {
 }
 
 class MedicalAssistant:
-    def __init__(self, checkpoint_path="./output/Qwen3-0.6B/checkpoint-1084"):
+    def __init__(self, checkpoint_path=os.path.join(PROJECT_ROOT, "output", "Qwen3-0.6B", "checkpoint-1084")):
         """初始化医疗助手"""
         self.checkpoint_path = checkpoint_path
         self.device, self.dtype = self._select_device_and_dtype()
@@ -300,7 +302,7 @@ class MedicalAssistant:
 def main():
     parser = argparse.ArgumentParser(description="医疗助手 - 基于Qwen3-0.6B的智能医疗咨询系统")
     parser.add_argument("--checkpoint", "-c", type=str, 
-                       default="./output/Qwen3-1.7B/checkpoint-1084",
+                       default=os.path.join(PROJECT_ROOT, "output", "Qwen3-1.7B", "checkpoint-1084"),
                        help="模型检查点路径")
     parser.add_argument("--question", "-q", type=str, 
                        help="直接询问问题（需要配合 --scenario 使用）")
@@ -345,3 +347,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

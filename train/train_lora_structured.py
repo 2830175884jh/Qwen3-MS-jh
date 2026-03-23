@@ -18,10 +18,10 @@ from peft import LoraConfig, TaskType, get_peft_model
 # 1. SwanLab 环境配置
 # =========================
 
-# 当前脚本目录：../Qwen3-MS/train
+# 当前脚本目录：.../train
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 
-# 项目根目录：.../Qwen3-MS
+# 仓库根目录：.../
 PROJECT_ROOT = os.path.dirname(SCRIPT_PATH)
 
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
@@ -248,7 +248,7 @@ def predict(messages, model, tokenizer, max_new_tokens=MAX_NEW_TOKENS):
     return response
 
 # =========================
-# 12. 鐢ㄩ獙璇侀泦鍓?鏉″仛涓昏娴嬭瘯
+# 12. 用验证集做主观测试
 # =========================
 test_df = pd.read_json(VAL_FILE, lines=True)[:3]
 test_text_list = []
@@ -279,6 +279,7 @@ try:
     swanlab.finish()
 except Exception as e:
     print(f"WARN: SwanLab logging skipped: {e}")
+
 
 
 
