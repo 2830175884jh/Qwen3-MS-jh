@@ -1,0 +1,13 @@
+swanlab
+modelscope==1.22.0
+transformers
+sentence-transformers
+datasets
+seqeval
+scikit-learn
+torch
+huggingface_hub
+peft
+accelerate
+pandas
+addict
