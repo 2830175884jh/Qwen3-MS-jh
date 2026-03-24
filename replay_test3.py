@@ -10,7 +10,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # 你想复现哪个 checkpoint，就改这里
-CHECKPOINT_PATH = os.path.join(SCRIPT_PATH, "output", "Qwen3-0.6B", "checkpoint-1084")
+CHECKPOINT_PATH = os.path.join(SCRIPT_PATH, "output", "Qwen3-0.6B-structured", "checkpoint-970")
 
 # 这里要用你训练时生成好的格式化验证集
 TEST_FILE = os.path.join(SCRIPT_PATH, "data", "val_format.jsonl")

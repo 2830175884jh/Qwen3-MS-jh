@@ -41,7 +41,7 @@ def load_dotenv_file(dotenv_path: Path | str = DEFAULT_DOTENV_PATH) -> None:
 
 
 def configure_swanlab(default_project: str, repo_root: Path | None = None) -> None:
-    root = repo_root or REPO_ROOT
+    root = Path(repo_root)
     load_dotenv_file(root / ".env")
 
     os.environ.setdefault("SWANLAB_SAVE_DIR", str(root / ".swanlab"))

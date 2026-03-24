@@ -60,17 +60,22 @@ def process_func(example):
     """
     将数据集进行预处理。
     """ 
-    input_ids, attention_mask, labels = [], [], []
-    instruction = tokenizer(
-        f"<|im_start|>system\n{PROMPT}<|im_end|>\n<|im_start|>user\n{example['input']}<|im_end|>\n<|im_start|>assistant\n",
-        add_special_tokens=False,
+    # 显式补上 eos，让模型在训练时学到结束标志
+    prompt_text = (
+        f"<|im_start|>system\n{PROMPT}<|im_end|>\n"
+        f"<|im_start|>user\n{example['input']}<|im_end|>\n"
+        f"<|im_start|>assistant\n"
     )
-    response = tokenizer(f"{example['output']}", add_special_tokens=False)
-    input_ids = instruction["input_ids"] + response["input_ids"] + [tokenizer.pad_token_id]
-    attention_mask = (
-        instruction["attention_mask"] + response["attention_mask"] + [1]
-    )
-    labels = [-100] * len(instruction["input_ids"]) + response["input_ids"] + [tokenizer.pad_token_id]
+    response_text = f"{example['output']}"
+    if tokenizer.eos_token:
+        response_text = response_text.rstrip() + tokenizer.eos_token
+
+    instruction = tokenizer(prompt_text, add_special_tokens=False)
+    response = tokenizer(response_text, add_special_tokens=False)
+
+    input_ids = instruction["input_ids"] + response["input_ids"]
+    attention_mask = [1] * len(input_ids)
+    labels = [-100] * len(instruction["input_ids"]) + response["input_ids"]
     if len(input_ids) > MAX_LENGTH:  # 做一个截断
         input_ids = input_ids[:MAX_LENGTH]
         attention_mask = attention_mask[:MAX_LENGTH]
@@ -104,6 +109,9 @@ model_dir = snapshot_download(model_name, cache_dir=MODEL_CACHE_DIR, revision="m
 
     # Transformers 加载模型权重
 tokenizer = AutoTokenizer.from_pretrained(model_dir, use_fast=False, trust_remote_code=True)
+if tokenizer.pad_token is None and tokenizer.eos_token is not None:
+    tokenizer.pad_token = tokenizer.eos_token
+tokenizer.padding_side = "right"
 model = AutoModelForCausalLM.from_pretrained(model_dir, device_map="auto", torch_dtype=torch.bfloat16)
 model.enable_input_require_grads()  # 开启梯度检查点时，需要调用该方法
 

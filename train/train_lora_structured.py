@@ -26,7 +26,7 @@ PROJECT_ROOT = os.path.dirname(SCRIPT_PATH)
 
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 MODEL_CACHE_DIR = os.path.join(PROJECT_ROOT, "models")
-OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output", "Qwen3-0.6B-structured")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output", "Qwen3-0.6B-structured-V2")
 
 TRAIN_FILE = os.path.join(DATA_DIR, "train_structured.jsonl")
 VAL_FILE = os.path.join(DATA_DIR, "val_structured.jsonl")
@@ -47,8 +47,8 @@ MODEL_NAME = "Qwen/Qwen3-0.6B"
 
 PROMPT = "你是一名医学知识讲解与科普助手，请针对用户的问题给出结构化、通俗、严谨的解释。不要输出思考过程，不要输出<think>标签。"
 
-MAX_LENGTH = 1024
-MAX_NEW_TOKENS = 384
+MAX_LENGTH = 2048
+MAX_NEW_TOKENS = 2048
 
 # 训练参数
 PER_DEVICE_TRAIN_BATCH_SIZE = 1
@@ -156,6 +156,9 @@ def process_func(example):
         attention_mask = attention_mask[:MAX_LENGTH]
         labels = labels[:MAX_LENGTH]
 
+        input_ids[-1] = tokenizer.eos_token_id
+        labels[-1] = tokenizer.eos_token_id
+
     return {
         "input_ids": input_ids,
         "attention_mask": attention_mask,
@@ -252,7 +255,9 @@ def predict(messages, model, tokenizer, max_new_tokens=MAX_NEW_TOKENS):
 # =========================
 test_df = pd.read_json(VAL_FILE, lines=True)[:3]
 test_text_list = []
-
+model.eval()
+if hasattr(model, "config"):
+    model.config.use_cache = True
 for index, row in test_df.iterrows():
     instruction = row["instruction"]
     input_value = row["input"]

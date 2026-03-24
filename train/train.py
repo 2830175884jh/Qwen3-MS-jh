@@ -57,18 +57,24 @@ def process_func(example):
     """
     将数据集进行预处理
     """ 
-    # 构造prompt和回答
-    instruction = tokenizer(
-        f"<|im_start|>system\n{PROMPT}<|im_end|>\n<|im_start|>user\n{example['input']}<|im_end|>\n<|im_start|>assistant\n",
-        add_special_tokens=False,
+    # 构造 prompt 和回答，并显式补上 eos，让模型学会在结束标志处停下
+    prompt_text = (
+        f"<|im_start|>system\n{PROMPT}<|im_end|>\n"
+        f"<|im_start|>user\n{example['input']}<|im_end|>\n"
+        f"<|im_start|>assistant\n"
     )
-    response = tokenizer(f"{example['output']}", add_special_tokens=False)
+    response_text = f"{example['output']}"
+    if tokenizer.eos_token:
+        response_text = response_text.rstrip() + tokenizer.eos_token
 
-    # 不手动添加pad，由collator负责padding
+    instruction = tokenizer(prompt_text, add_special_tokens=False)
+    response = tokenizer(response_text, add_special_tokens=False)
+
+    # 真实 token 位置为 1，padding 交给 collator 统一补
     input_ids = instruction["input_ids"] + response["input_ids"]
-    attention_mask = instruction["attention_mask"] + response["attention_mask"]
+    attention_mask = [1] * len(input_ids)
 
-    # labels 仅对assistant部分计算损失，prompt部分置为 -100
+    # labels 仅对 assistant 回复部分计算损失，prompt 部分置为 -100
     labels = [-100] * len(instruction["input_ids"]) + response["input_ids"]
 
     # 截断
@@ -135,6 +141,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_dir, use_fast=False, trust_remot
 # 确保存在pad token，便于padding
 if tokenizer.pad_token is None and tokenizer.eos_token is not None:
     tokenizer.pad_token = tokenizer.eos_token
+tokenizer.padding_side = "right"
 
 model = AutoModelForCausalLM.from_pretrained(model_dir, torch_dtype=load_dtype)
 model.enable_input_require_grads()  # 开启梯度检查点时，要执行该方法
