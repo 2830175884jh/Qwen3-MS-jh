@@ -82,6 +82,8 @@ def process_func(example):
         input_ids = input_ids[:MAX_LENGTH]
         attention_mask = attention_mask[:MAX_LENGTH]
         labels = labels[:MAX_LENGTH]
+        input_ids[-1] = tokenizer.eos_token_id
+        labels[-1] = tokenizer.eos_token_id
 
     return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": labels}
 
@@ -203,7 +205,9 @@ trainer.train()
 test_df = pd.read_json(val_jsonl_new_path, lines=True)[:3]
 
 test_text_list = []
-
+model.eval()
+if hasattr(model, "config"):
+    model.config.use_cache = True
 for index, row in test_df.iterrows():
     instruction = row['instruction']
     input_value = row['input']
